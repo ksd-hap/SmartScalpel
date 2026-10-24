@@ -121,5 +121,81 @@
     "n": 15,
     "model_correct_on_demo": 12,
     "selection": "seeded random per class from held-out test patients; not filtered by correctness"
+  },
+  "nested_grouped_cv": {
+    "n_outer_folds": 6,
+    "n_patients": 72,
+    "n_spectra": 689,
+    "pooled_accuracy": 0.8867924528301887,
+    "pooled_balanced_accuracy": 0.8849476318637503,
+    "pooled_macro_f1": 0.884670425527378,
+    "per_class_recall": {
+      "tumour": 0.9151785714285714,
+      "stroma": 0.8373205741626795,
+      "adipose": 0.90234375
+    },
+    "fold_balanced_accuracy_mean_std": [
+      0.8856361155833978,
+      0.0405774459201534
+    ],
+    "models_selected_per_fold": [
+      "pca-lda",
+      "pca-logreg",
+      "pca-lda",
+      "pca-lda",
+      "pca-logreg",
+      "pca-lda"
+    ],
+    "folds": [
+      {
+        "fold": 0,
+        "n_test_patients": 12,
+        "n_test_spectra": 120,
+        "selected_model": "pca-lda",
+        "accuracy": 0.9083333333333333,
+        "balanced_accuracy": 0.9105105105105106
+      },
+      {
+        "fold": 1,
+        "n_test_patients": 12,
+        "n_test_spectra": 111,
+        "selected_model": "pca-logreg",
+        "accuracy": 0.8378378378378378,
+        "balanced_accuracy": 0.834037409001541
+      },
+      {
+        "fold": 2,
+        "n_test_patients": 14,
+        "n_test_spectra": 115,
+        "selected_model": "pca-lda",
+        "accuracy": 0.9130434782608695,
+        "balanced_accuracy": 0.9060647514819881
+      },
+      {
+        "fold": 3,
+        "n_test_patients": 10,
+        "n_test_spectra": 111,
+        "selected_model": "pca-lda",
+        "accuracy": 0.9459459459459459,
+        "balanced_accuracy": 0.9475709475709476
+      },
+      {
+        "fold": 4,
+        "n_test_patients": 11,
+        "n_test_spectra": 113,
+        "selected_model": "pca-logreg",
+        "accuracy": 0.8761061946902655,
+        "balanced_accuracy": 0.8777777777777778
+      },
+      {
+        "fold": 5,
+        "n_test_patients": 13,
+        "n_test_spectra": 119,
+        "selected_model": "pca-lda",
+        "accuracy": 0.8403361344537815,
+        "balanced_accuracy": 0.8378552971576227
+      }
+    ],
+    "note": "Every spectrum is predicted by a model that never saw that patient; selection repeated inside each fold."
   }
 }

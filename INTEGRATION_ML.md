@@ -37,3 +37,10 @@ spectrum (simulation)", not "cancer detected".
 ## For Person 3 (LED)
 Receives only the LED state from the backend, never spectra or scores. Suggested mapping is the team's choice; the ML side
 only provides `predicted_class` and `accepted`.
+
+## Expected performance (quote these, with the caveats)
+- Best estimate: nested patient-grouped 6-fold CV over all 72 patients (`py -m ml.cv_report`): accuracy **88.7%**, balanced
+  accuracy 88.5%, macro F1 0.885; recall tumour 91.5%, stroma 83.7%, adipose 90.2%. Fold-to-fold balanced accuracy spread: +/-4 points.
+- The saved model was also checked on one fixed hold-out of 18 patients (160 spectra): accuracy 92.5%, tumour recall 96.9%.
+  That split was somewhat favourable; do not quote it as the headline number.
+- Both are on ex-vivo research spectra from one published dataset. Not clinically validated.
