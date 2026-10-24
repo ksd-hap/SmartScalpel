@@ -1,0 +1,6 @@
+# raw dataset (75 MB, third-party supplementary file; download from the Nature article)
+data/
+__pycache__/
+*.pyc
+.pytest_cache/
+.claude/

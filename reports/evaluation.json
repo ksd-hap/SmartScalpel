@@ -1,0 +1,125 @@
+{
+  "model_version": "pca-lda-v1",
+  "selected_model": "pca-lda",
+  "model_comparison_train_grouped_cv": {
+    "pca-lda": {
+      "cv_balanced_accuracy": 0.8814882417280551,
+      "best_params": {
+        "pca__n_components": 50
+      }
+    },
+    "pca-svm": {
+      "cv_balanced_accuracy": 0.8590938867679105,
+      "best_params": {
+        "clf__estimator__C": 10,
+        "pca__n_components": 50
+      }
+    },
+    "pca-logreg": {
+      "cv_balanced_accuracy": 0.8397529718348903,
+      "best_params": {
+        "clf__C": 0.01,
+        "pca__n_components": 20
+      }
+    }
+  },
+  "split": {
+    "method": "GroupShuffleSplit by patient",
+    "seed": 42,
+    "n_train_patients": 54,
+    "n_train_spectra": 529,
+    "n_test_patients": 18,
+    "n_test_spectra": 160
+  },
+  "temperature": 3.319444936948596,
+  "rejection_threshold_selection": {
+    "source": "out-of-fold scores on training patients only",
+    "note": "target met",
+    "threshold": 0.82
+  },
+  "heldout_test": {
+    "n_spectra": 160,
+    "n_independent_patients": 18,
+    "class_counts": {
+      "tumour": 65,
+      "stroma": 47,
+      "adipose": 48
+    },
+    "accuracy": 0.925,
+    "balanced_accuracy": 0.9198558828877977,
+    "macro_f1": 0.9197395197395197,
+    "per_class_recall": {
+      "tumour": 0.9692307692307692,
+      "stroma": 0.9361702127659575,
+      "adipose": 0.8541666666666666
+    },
+    "tumour_recall": 0.9692307692307692,
+    "confusion_matrix": {
+      "labels_rows_true_cols_predicted": [
+        "tumour",
+        "stroma",
+        "adipose"
+      ],
+      "matrix": [
+        [
+          63,
+          1,
+          1
+        ],
+        [
+          2,
+          44,
+          1
+        ],
+        [
+          0,
+          7,
+          41
+        ]
+      ]
+    },
+    "rejection": {
+      "threshold": 0.82,
+      "fraction_rejected": 0.25,
+      "accuracy_on_accepted": 0.9833333333333333
+    },
+    "latency_single_spectrum": {
+      "n_calls": 160,
+      "median_ms": 0.46229996951296926,
+      "p95_ms": 0.5126149451825768
+    }
+  },
+  "dataset": {
+    "path": "C:\\Users\\dawoo\\OneDrive\\Documents\\SmartScalpel\\data\\41598_2020_77102_MOESM3_ESM.xlsx",
+    "sheet": "MAM_REIMS_A_S_T.data",
+    "label_column": "Class",
+    "patient_column": "Patient",
+    "n_spectra": 689,
+    "n_patients": 72,
+    "n_features": 8000,
+    "class_counts": {
+      "tumour": 224,
+      "stroma": 209,
+      "adipose": 256
+    },
+    "mz_from_headers": true,
+    "mz_range": [
+      200.05,
+      999.95
+    ],
+    "n_missing": 0,
+    "n_inf": 0,
+    "intensity_min": 0.0,
+    "intensity_max": 0.147085061019451,
+    "problems": []
+  },
+  "notes": [
+    "Scores are temperature-scaled model scores, not clinical probabilities.",
+    "Not a clinical diagnostic tool; trained on ex-vivo REIMS spectra only."
+  ],
+  "demo_samples": {
+    "n": 15,
+    "model_correct_on_demo": 12,
+    "selection": "seeded random per class from held-out test patients; not filtered by correctness"
+  }
+}
