@@ -17,6 +17,14 @@ MODEL_PATH = ROOT / "models" / "tissue_model.joblib"
 DEMO_PATH = ROOT / "models" / "demo_samples.npz"
 REGION_TYPES = ("tumour", "stroma", "adipose")
 
+# PROPOSED LED mapping - agree it with Person 3/4. Rejected (low-confidence) results get their own state.
+LED_COLOURS = {
+    "tumour": ("red", (255, 0, 0)),
+    "stroma": ("blue", (0, 0, 255)),
+    "adipose": ("yellow", (255, 180, 0)),
+    "uncertain": ("white", (255, 255, 255)),
+}
+
 _model: dict | None = None
 _demo: dict | None = None
 
@@ -58,6 +66,13 @@ def predict_tissue(spectrum) -> dict:
         "model_version": m["model_version"],
         "score_type": "temperature_scaled_model_score",
     }
+
+
+def led_state(result: dict) -> dict:
+    """Map a predict_tissue() result to the LED state sent to the hardware. Contains no scores or model details."""
+    state = result["predicted_class"] if result["accepted"] else "uncertain"
+    name, rgb = LED_COLOURS[state]
+    return {"led_state": state, "colour": name, "rgb": list(rgb)}
 
 
 def _load_demo() -> dict:

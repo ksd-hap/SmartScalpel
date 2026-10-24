@@ -119,3 +119,12 @@ def test_real_saved_model_roundtrip():
         s = ml_service.get_demo_spectrum(region, index=0)
         out = ml_service.predict_tissue(s["spectrum"])
         assert out == ml_service.predict_tissue(s["spectrum"])
+
+
+def test_led_state_mapping():
+    base = {"scores": {}, "model_version": "x"}
+    assert ml_service.led_state({**base, "predicted_class": "tumour", "accepted": True})["rgb"] == [255, 0, 0]
+    assert ml_service.led_state({**base, "predicted_class": "stroma", "accepted": True})["colour"] == "blue"
+    assert ml_service.led_state({**base, "predicted_class": "adipose", "accepted": True})["colour"] == "yellow"
+    u = ml_service.led_state({**base, "predicted_class": "tumour", "accepted": False})
+    assert u["led_state"] == "uncertain" and set(u) == {"led_state", "colour", "rgb"}
