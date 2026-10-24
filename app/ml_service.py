@@ -17,12 +17,12 @@ MODEL_PATH = ROOT / "models" / "tissue_model.joblib"
 DEMO_PATH = ROOT / "models" / "demo_samples.npz"
 REGION_TYPES = ("tumour", "stroma", "adipose")
 
-# PROPOSED LED mapping - agree it with Person 3/4. Rejected (low-confidence) results get their own state.
+# LED mapping agreed by the team: two colours only. Stroma and rejected (low-confidence) results leave the LED off.
 LED_COLOURS = {
     "tumour": ("red", (255, 0, 0)),
-    "stroma": ("blue", (0, 0, 255)),
-    "adipose": ("yellow", (255, 180, 0)),
-    "uncertain": ("white", (255, 255, 255)),
+    "adipose": ("green", (0, 255, 0)),
+    "stroma": ("off", (0, 0, 0)),
+    "uncertain": ("off", (0, 0, 0)),
 }
 
 _model: dict | None = None

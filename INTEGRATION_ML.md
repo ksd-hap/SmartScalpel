@@ -37,9 +37,10 @@ spectrum (simulation)", not "cancer detected".
 ## For Person 3 (LED)
 Receives only the LED state from the backend, never spectra or scores. `app.ml_service.led_state(result)` returns
 `{"led_state": "tumour|stroma|adipose|uncertain", "colour": "red", "rgb": [255, 0, 0]}`.
-PROPOSED mapping (team can change `LED_COLOURS` in `app/ml_service.py`): tumour = red, stroma = blue, adipose = yellow (255,180,0),
-uncertain (rejected) = white. An Arduino Mega has no Wi-Fi: it needs a USB serial link to the laptop, e.g. send `255,0,0
+Agreed mapping (`LED_COLOURS` in `app/ml_service.py`): tumour = red (255,0,0), adipose = green (0,255,0),
+stroma = off, uncertain (rejected) = off. An Arduino Mega has no Wi-Fi: it needs a USB serial link to the laptop, e.g. send `255,0,0
 `.
+The LED cannot show stroma, so the iPad must show the real class name.
 
 ## Expected performance (quote these, with the caveats)
 - Best estimate: nested patient-grouped 6-fold CV over all 72 patients (`py -m ml.cv_report`): accuracy **91.1%**, balanced

@@ -36,16 +36,16 @@ Model: standardise -> PCA (100 components) -> shrinkage LDA, with an uncertainty
 
 Full numbers: `reports/evaluation.json`. Reproduce them with `py -m ml.validate`.
 
-## LED output (proposed mapping)
+## LED output
 
 | Model result | LED |
 |---|---|
 | tumour | red (255, 0, 0) |
-| stroma | blue (0, 0, 255) |
-| adipose | yellow (255, 180, 0) |
-| uncertain (low score) | white |
+| adipose | green (0, 255, 0) |
+| stroma | off |
+| uncertain (low score) | off |
 
-The hardware receives only the LED state, never spectra or scores. An Arduino Mega has no Wi-Fi, so it connects to the laptop by USB serial.
+The LED only has two colours, so it cannot show stroma; the iPad always shows the model's actual class name. The hardware receives only the LED state, never spectra or scores. An Arduino Mega has no Wi-Fi, so it connects to the laptop by USB serial.
 
 ## Quick start
 
@@ -66,7 +66,7 @@ load_model()                                  # once at startup
 s = get_demo_spectrum("stroma")               # {"sample_id": ..., "spectrum": [8000 floats]}
 result = predict_tissue(s["spectrum"])        # exactly one 1-D spectrum, 8000 finite floats
 # {"predicted_class": "stroma", "scores": {...}, "accepted": True, "model_version": "pca-lda-v2", ...}
-led = led_state(result)                       # {"led_state": "stroma", "colour": "blue", "rgb": [0, 0, 255]}
+led = led_state(result)                       # {"led_state": "tumour", "colour": "red", "rgb": [255, 0, 0]}  (stroma / uncertain -> off)
 ```
 
 Wrong input size or NaN values raise `ValueError`. Per-role integration notes are in [`INTEGRATION_ML.md`](INTEGRATION_ML.md).

@@ -124,7 +124,8 @@ def test_real_saved_model_roundtrip():
 def test_led_state_mapping():
     base = {"scores": {}, "model_version": "x"}
     assert ml_service.led_state({**base, "predicted_class": "tumour", "accepted": True})["rgb"] == [255, 0, 0]
-    assert ml_service.led_state({**base, "predicted_class": "stroma", "accepted": True})["colour"] == "blue"
-    assert ml_service.led_state({**base, "predicted_class": "adipose", "accepted": True})["colour"] == "yellow"
+    assert ml_service.led_state({**base, "predicted_class": "adipose", "accepted": True})["rgb"] == [0, 255, 0]
+    st = ml_service.led_state({**base, "predicted_class": "stroma", "accepted": True})
+    assert st["led_state"] == "stroma" and st["rgb"] == [0, 0, 0]
     u = ml_service.led_state({**base, "predicted_class": "tumour", "accepted": False})
-    assert u["led_state"] == "uncertain" and set(u) == {"led_state", "colour", "rgb"}
+    assert u["led_state"] == "uncertain" and u["rgb"] == [0, 0, 0] and set(u) == {"led_state", "colour", "rgb"}

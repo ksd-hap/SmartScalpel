@@ -1,8 +1,6 @@
 """Export a tidy hand-off package of the held-out test patients (never used for training or model selection).
 Run: py -m ml.export_csv  ->  exports/teammate_package/
 """
-import shutil
-
 import joblib
 import numpy as np
 import pandas as pd
@@ -26,16 +24,14 @@ demo_samples.csv             15 curated demo spectra (region_type = the virtual 
 
 Use: py -c "import pandas as pd; from app.ml_service import predict_tissue; d=pd.read_csv('spectra_input.csv'); print(predict_tissue(d.iloc[0,1:].to_numpy()))"
 (Run from the repo root; the first column is sample_id, so drop it.)
-LED colours are a PROPOSED mapping: tumour=red, stroma=blue, adipose=yellow, uncertain (rejected)=white.
+LED mapping: tumour=red, adipose=green, stroma=off, uncertain (rejected)=off.
 """
 
 
 def main():
     art = joblib.load(MODEL_PATH)
     ds = load_dataset()
-    if OUT.exists():
-        shutil.rmtree(OUT)
-    OUT.mkdir(parents=True)
+    OUT.mkdir(parents=True, exist_ok=True)  # overwrite files in place (rmtree fails on OneDrive-locked folders)
     cols = [f"{m:.2f}" for m in ds.mz]
     te = np.where(np.isin(ds.patients, art["test_patients"]))[0]
     true = [LABEL_NAMES[c] for c in ds.y[te]]
