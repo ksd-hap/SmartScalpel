@@ -20,13 +20,13 @@ not sense tissue, and the model does not locate tumours; it classifies one recor
   ```json
   {"predicted_class": "tumour|stroma|adipose",
    "scores": {"tumour": 0.0, "stroma": 0.0, "adipose": 0.0},
-   "accepted": true, "model_version": "pca-lda-v1",
+   "accepted": true, "model_version": "pca-lda-v2",
    "score_type": "temperature_scaled_model_score"}
   ```
   `scores` are temperature-scaled model scores (sum to 1), NOT clinical probabilities. `accepted=false` means the model is too
-  unsure (top score < 0.82): show "uncertain" and tell Person 3 to use the neutral/off colour.
-- Latency: median ~0.5 ms, p95 ~0.5 ms per spectrum on the dev laptop (measured in `reports/evaluation.json`).
-- Demo spectra: 5 per region type (tumour/stroma/adipose), from held-out patients the model never trained on.
+  unsure (top score < reject_threshold, currently 0.77): show "uncertain" and tell Person 3 to use the neutral/off colour.
+- Latency: see `latency_single_spectrum` in reports/evaluation.json (about 1 ms) per spectrum on the dev laptop (measured in `reports/evaluation.json`).
+- Demo spectra: 4 typical + 1 uncertain per region type (tumour/stroma/adipose), from held-out patients the model never trained on.
   `get_demo_spectrum(region, index=None)`; `index` picks one deterministically, otherwise random. The true label is never returned.
 
 ## For Person 2 (iPad/frontend)
@@ -39,8 +39,15 @@ Receives only the LED state from the backend, never spectra or scores. Suggested
 only provides `predicted_class` and `accepted`.
 
 ## Expected performance (quote these, with the caveats)
-- Best estimate: nested patient-grouped 6-fold CV over all 72 patients (`py -m ml.cv_report`): accuracy **88.7%**, balanced
-  accuracy 88.5%, macro F1 0.885; recall tumour 91.5%, stroma 83.7%, adipose 90.2%. Fold-to-fold balanced accuracy spread: +/-4 points.
-- The saved model was also checked on one fixed hold-out of 18 patients (160 spectra): accuracy 92.5%, tumour recall 96.9%.
-  That split was somewhat favourable; do not quote it as the headline number.
+- Best estimate: nested patient-grouped 6-fold CV over all 72 patients (`py -m ml.cv_report`): accuracy **91.1%**, balanced
+  accuracy 91.0%, macro F1 0.910; recall tumour 95.1%, stroma 86.6%, adipose 91.4%.
+  Fold-to-fold balanced accuracy spread: +/-2 points.
+- Fixed hold-out of 18 patients (160 spectra) used for the saved model: accuracy 91.2%, tumour recall 93.8%.
+- Model v2 = PCA + shrinkage LDA (more PCA components than v1). Chosen after comparing variants by nested CV (reports/experiments.json);
+  gains over v1 were ~1-2 points, inside the fold spread, so treat the improvement as modest.
 - Both are on ex-vivo research spectra from one published dataset. Not clinically validated.
+
+## Demo samples are curated (say so when presenting)
+`get_demo_spectrum(region)` returns "typical" spectra: held-out, correctly classified and accepted by the model. 
+`get_demo_spectrum(region, kind="uncertain")` returns a real spectrum the model rejects, to show the uncertainty feature live.
+These show how the pipeline behaves; they do not represent overall accuracy (see above).

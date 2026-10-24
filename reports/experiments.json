@@ -1,0 +1,188 @@
+{
+  "lda_baseline (10-50 comps)": {
+    "accuracy": 0.895500725689405,
+    "balanced_accuracy": 0.8941173957621326,
+    "recall": {
+      "tumour": 0.9196428571428571,
+      "stroma": 0.8564593301435407,
+      "adipose": 0.90625
+    },
+    "chosen_params_per_fold": [
+      {
+        "pca__n_components": 50
+      },
+      {
+        "pca__n_components": 30
+      },
+      {
+        "pca__n_components": 50
+      },
+      {
+        "pca__n_components": 50
+      },
+      {
+        "pca__n_components": 50
+      },
+      {
+        "pca__n_components": 30
+      }
+    ]
+  },
+  "lda_more_comps (30-150)": {
+    "accuracy": 0.9013062409288825,
+    "balanced_accuracy": 0.8997769637161085,
+    "recall": {
+      "tumour": 0.9375,
+      "stroma": 0.8516746411483254,
+      "adipose": 0.91015625
+    },
+    "chosen_params_per_fold": [
+      {
+        "pca__n_components": 75
+      },
+      {
+        "pca__n_components": 150
+      },
+      {
+        "pca__n_components": 150
+      },
+      {
+        "pca__n_components": 150
+      },
+      {
+        "pca__n_components": 75
+      },
+      {
+        "pca__n_components": 150
+      }
+    ]
+  },
+  "lda_uniform_priors": {
+    "accuracy": 0.9100145137880987,
+    "balanced_accuracy": 0.9091603298017773,
+    "recall": {
+      "tumour": 0.9330357142857143,
+      "stroma": 0.8803827751196173,
+      "adipose": 0.9140625
+    },
+    "chosen_params_per_fold": [
+      {
+        "pca__n_components": 75
+      },
+      {
+        "pca__n_components": 150
+      },
+      {
+        "pca__n_components": 100
+      },
+      {
+        "pca__n_components": 150
+      },
+      {
+        "pca__n_components": 150
+      },
+      {
+        "pca__n_components": 150
+      }
+    ]
+  },
+  "lda_shrinkage": {
+    "accuracy": 0.9114658925979681,
+    "balanced_accuracy": 0.9103280217589428,
+    "recall": {
+      "tumour": 0.9508928571428571,
+      "stroma": 0.8660287081339713,
+      "adipose": 0.9140625
+    },
+    "chosen_params_per_fold": [
+      {
+        "pca__n_components": 100
+      },
+      {
+        "pca__n_components": 150
+      },
+      {
+        "pca__n_components": 100
+      },
+      {
+        "pca__n_components": 75
+      },
+      {
+        "pca__n_components": 150
+      },
+      {
+        "pca__n_components": 150
+      }
+    ]
+  },
+  "logreg_balanced": {
+    "accuracy": 0.8795355587808418,
+    "balanced_accuracy": 0.878171992481203,
+    "recall": {
+      "tumour": 0.9017857142857143,
+      "stroma": 0.8421052631578947,
+      "adipose": 0.890625
+    },
+    "chosen_params_per_fold": [
+      {
+        "clf__C": 0.1,
+        "pca__n_components": 30
+      },
+      {
+        "clf__C": 0.01,
+        "pca__n_components": 30
+      },
+      {
+        "clf__C": 0.01,
+        "pca__n_components": 100
+      },
+      {
+        "clf__C": 0.01,
+        "pca__n_components": 100
+      },
+      {
+        "clf__C": 0.01,
+        "pca__n_components": 50
+      },
+      {
+        "clf__C": 0.01,
+        "pca__n_components": 150
+      }
+    ]
+  },
+  "svm_balanced": {
+    "accuracy": 0.888243831640058,
+    "balanced_accuracy": 0.8870213530986558,
+    "recall": {
+      "tumour": 0.9196428571428571,
+      "stroma": 0.84688995215311,
+      "adipose": 0.89453125
+    },
+    "chosen_params_per_fold": [
+      {
+        "clf__C": 10,
+        "pca__n_components": 150
+      },
+      {
+        "clf__C": 10,
+        "pca__n_components": 150
+      },
+      {
+        "clf__C": 10,
+        "pca__n_components": 100
+      },
+      {
+        "clf__C": 10,
+        "pca__n_components": 150
+      },
+      {
+        "clf__C": 10,
+        "pca__n_components": 150
+      },
+      {
+        "clf__C": 10,
+        "pca__n_components": 150
+      }
+    ]
+  }
+}

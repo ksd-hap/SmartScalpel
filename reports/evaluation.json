@@ -1,25 +1,25 @@
 {
-  "model_version": "pca-lda-v1",
+  "model_version": "pca-lda-v2",
   "selected_model": "pca-lda",
   "model_comparison_train_grouped_cv": {
     "pca-lda": {
-      "cv_balanced_accuracy": 0.8814882417280551,
+      "cv_balanced_accuracy": 0.9033314152584101,
       "best_params": {
-        "pca__n_components": 50
+        "pca__n_components": 100
       }
     },
     "pca-svm": {
-      "cv_balanced_accuracy": 0.8590938867679105,
+      "cv_balanced_accuracy": 0.8716627828894381,
       "best_params": {
         "clf__estimator__C": 10,
-        "pca__n_components": 50
+        "pca__n_components": 150
       }
     },
     "pca-logreg": {
-      "cv_balanced_accuracy": 0.8397529718348903,
+      "cv_balanced_accuracy": 0.864930307078015,
       "best_params": {
         "clf__C": 0.01,
-        "pca__n_components": 20
+        "pca__n_components": 150
       }
     }
   },
@@ -31,11 +31,11 @@
     "n_test_patients": 18,
     "n_test_spectra": 160
   },
-  "temperature": 3.319444936948596,
+  "temperature": 1.0000046767069326,
   "rejection_threshold_selection": {
     "source": "out-of-fold scores on training patients only",
     "note": "target met",
-    "threshold": 0.82
+    "threshold": 0.77
   },
   "heldout_test": {
     "n_spectra": 160,
@@ -45,15 +45,15 @@
       "stroma": 47,
       "adipose": 48
     },
-    "accuracy": 0.925,
-    "balanced_accuracy": 0.9198558828877977,
-    "macro_f1": 0.9197395197395197,
+    "accuracy": 0.9125,
+    "balanced_accuracy": 0.9095994726313874,
+    "macro_f1": 0.9081431159420289,
     "per_class_recall": {
-      "tumour": 0.9692307692307692,
+      "tumour": 0.9384615384615385,
       "stroma": 0.9361702127659575,
       "adipose": 0.8541666666666666
     },
-    "tumour_recall": 0.9692307692307692,
+    "tumour_recall": 0.9384615384615385,
     "confusion_matrix": {
       "labels_rows_true_cols_predicted": [
         "tumour",
@@ -62,9 +62,9 @@
       ],
       "matrix": [
         [
-          63,
-          1,
-          1
+          61,
+          2,
+          2
         ],
         [
           2,
@@ -79,14 +79,14 @@
       ]
     },
     "rejection": {
-      "threshold": 0.82,
-      "fraction_rejected": 0.25,
-      "accuracy_on_accepted": 0.9833333333333333
+      "threshold": 0.77,
+      "fraction_rejected": 0.20625000000000004,
+      "accuracy_on_accepted": 0.968503937007874
     },
     "latency_single_spectrum": {
       "n_calls": 160,
-      "median_ms": 0.46229996951296926,
-      "p95_ms": 0.5126149451825768
+      "median_ms": 1.2074500555172563,
+      "p95_ms": 1.5975349408108739
     }
   },
   "dataset": {
@@ -119,31 +119,35 @@
   ],
   "demo_samples": {
     "n": 15,
-    "model_correct_on_demo": 12,
-    "selection": "seeded random per class from held-out test patients; not filtered by correctness"
+    "kinds": {
+      "uncertain": 3,
+      "typical": 12
+    },
+    "selection": "curated from held-out test patients: 'typical' = correctly classified and accepted; 'uncertain' = lowest-scoring rejected spectrum of the class. Demo samples are NOT representative of overall accuracy (see nested_grouped_cv).",
+    "overall_heldout_accuracy_for_comparison": 0.9125
   },
   "nested_grouped_cv": {
     "n_outer_folds": 6,
     "n_patients": 72,
     "n_spectra": 689,
-    "pooled_accuracy": 0.8867924528301887,
-    "pooled_balanced_accuracy": 0.8849476318637503,
-    "pooled_macro_f1": 0.884670425527378,
+    "pooled_accuracy": 0.9114658925979681,
+    "pooled_balanced_accuracy": 0.9103280217589428,
+    "pooled_macro_f1": 0.9097568125406724,
     "per_class_recall": {
-      "tumour": 0.9151785714285714,
-      "stroma": 0.8373205741626795,
-      "adipose": 0.90234375
+      "tumour": 0.9508928571428571,
+      "stroma": 0.8660287081339713,
+      "adipose": 0.9140625
     },
     "fold_balanced_accuracy_mean_std": [
-      0.8856361155833978,
-      0.0405774459201534
+      0.9111710387752594,
+      0.020352212776559676
     ],
     "models_selected_per_fold": [
       "pca-lda",
-      "pca-logreg",
       "pca-lda",
       "pca-lda",
-      "pca-logreg",
+      "pca-lda",
+      "pca-lda",
       "pca-lda"
     ],
     "folds": [
@@ -152,48 +156,48 @@
         "n_test_patients": 12,
         "n_test_spectra": 120,
         "selected_model": "pca-lda",
-        "accuracy": 0.9083333333333333,
-        "balanced_accuracy": 0.9105105105105106
+        "accuracy": 0.9166666666666666,
+        "balanced_accuracy": 0.9163163163163164
       },
       {
         "fold": 1,
         "n_test_patients": 12,
         "n_test_spectra": 111,
-        "selected_model": "pca-logreg",
-        "accuracy": 0.8378378378378378,
-        "balanced_accuracy": 0.834037409001541
+        "selected_model": "pca-lda",
+        "accuracy": 0.918918918918919,
+        "balanced_accuracy": 0.9173308889951645
       },
       {
         "fold": 2,
         "n_test_patients": 14,
         "n_test_spectra": 115,
         "selected_model": "pca-lda",
-        "accuracy": 0.9130434782608695,
-        "balanced_accuracy": 0.9060647514819881
+        "accuracy": 0.9217391304347826,
+        "balanced_accuracy": 0.918952648378813
       },
       {
         "fold": 3,
         "n_test_patients": 10,
         "n_test_spectra": 111,
         "selected_model": "pca-lda",
-        "accuracy": 0.9459459459459459,
-        "balanced_accuracy": 0.9475709475709476
+        "accuracy": 0.9369369369369369,
+        "balanced_accuracy": 0.9374699374699375
       },
       {
         "fold": 4,
         "n_test_patients": 11,
         "n_test_spectra": 113,
-        "selected_model": "pca-logreg",
-        "accuracy": 0.8761061946902655,
-        "balanced_accuracy": 0.8777777777777778
+        "selected_model": "pca-lda",
+        "accuracy": 0.9026548672566371,
+        "balanced_accuracy": 0.9063492063492063
       },
       {
         "fold": 5,
         "n_test_patients": 13,
         "n_test_spectra": 119,
         "selected_model": "pca-lda",
-        "accuracy": 0.8403361344537815,
-        "balanced_accuracy": 0.8378552971576227
+        "accuracy": 0.8739495798319328,
+        "balanced_accuracy": 0.8706072351421188
       }
     ],
     "note": "Every spectrum is predicted by a model that never saw that patient; selection repeated inside each fold."

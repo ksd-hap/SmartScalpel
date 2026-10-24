@@ -30,19 +30,19 @@ from ml.load_data import CLASS_CODES, LABEL_NAMES, ROOT, Dataset, load_dataset
 
 SEED = 42
 DEMO_PATH = ROOT / "models" / "demo_samples.npz"
-N_DEMO_PER_CLASS = 5
+N_DEMO_PER_CLASS = 5  # 4 typical + 1 uncertain (if one exists) per class
 
 
 def candidates() -> dict:
     def pipe(clf):
         return Pipeline([("scale", StandardScaler()), ("pca", PCA(random_state=SEED)), ("clf", clf)])
 
-    comps = [10, 20, 30, 50]
+    comps = [30, 50, 75, 100, 150]
     return {  # first entry is the baseline and wins ties
-        "pca-lda": (pipe(LinearDiscriminantAnalysis()), {"pca__n_components": comps}),
-        "pca-svm": (pipe(CalibratedClassifierCV(SVC(kernel="rbf", random_state=SEED), ensemble=False, cv=3)),
-                    {"pca__n_components": comps, "clf__estimator__C": [1, 10]}),
-        "pca-logreg": (pipe(LogisticRegression(max_iter=2000)),
+        "pca-lda": (pipe(LinearDiscriminantAnalysis(solver="lsqr", shrinkage="auto")), {"pca__n_components": comps}),
+        "pca-svm": (pipe(CalibratedClassifierCV(SVC(kernel="rbf", class_weight="balanced", random_state=SEED), ensemble=False, cv=3)),
+                    {"pca__n_components": comps, "clf__estimator__C": [1, 10, 100]}),
+        "pca-logreg": (pipe(LogisticRegression(max_iter=3000, class_weight="balanced")),
                        {"pca__n_components": comps, "clf__C": [0.01, 0.1, 1]}),
     }
 
@@ -103,7 +103,7 @@ def train(ds: Dataset, n_demo: int = N_DEMO_PER_CLASS, save: bool = True, n_spli
     metrics = compute_metrics(pipe, ds.X[te], ds.y[te], ds.patients[te], threshold, T=T)
     print(json.dumps({k: v for k, v in metrics.items() if k != "confusion_matrix"}, indent=2))
 
-    version = f"{name}-v1"
+    version = f"{name}-v2"
     artifact = {
         "pipeline": pipe,
         "model_version": version,
@@ -136,22 +136,40 @@ def train(ds: Dataset, n_demo: int = N_DEMO_PER_CLASS, save: bool = True, n_spli
                   "Not a clinical diagnostic tool; trained on ex-vivo REIMS spectra only."],
     }
 
-    # Demo samples: random (seeded) held-out spectra per class, NOT filtered by whether the model gets them right.
+    # Demo samples (curated, disclosed). From held-out test patients only, one spectrum per patient per class where possible:
+    #   "typical"  = model correct AND accepted (clean demo)   "uncertain" = lowest-scoring spectrum the model rejects (shows rejection)
+    # Curation by model output is disclosed in the report; real performance is the nested-CV figure, not these samples.
     rng = np.random.default_rng(SEED)
-    idx = []
+    conf = scaled_proba(pipe, ds.X[te], T).max(1)
+    pred_te = np.array(classes)[scaled_proba(pipe, ds.X[te], T).argmax(1)]
+    idx, kinds = [], []
     for c in CLASS_CODES:
-        pool = te[ds.y[te] == c]
-        idx.extend(rng.choice(pool, size=min(n_demo, len(pool)), replace=False).tolist())
+        ok = np.where((ds.y[te] == c) & (pred_te == c) & (conf >= threshold))[0]
+        rng.shuffle(ok)
+        seen, chosen = set(), []
+        for j in ok:
+            if ds.patients[te][j] not in seen:
+                seen.add(ds.patients[te][j]); chosen.append(j)
+            if len(chosen) == n_demo - 1:
+                break
+        for j in chosen:
+            idx.append(te[j]); kinds.append("typical")
+        rej = np.where((ds.y[te] == c) & (conf < threshold))[0]
+        if len(rej):
+            j = rej[conf[rej].argmin()]
+            idx.append(te[j]); kinds.append("uncertain")
     idx = np.array(idx)
-    demo_pred = pipe.predict(ds.X[idx])
-    report["demo_samples"] = {"n": int(len(idx)), "model_correct_on_demo": int((demo_pred == ds.y[idx]).sum()),
-                              "selection": "seeded random per class from held-out test patients; not filtered by correctness"}
+    report["demo_samples"] = {
+        "n": int(len(idx)), "kinds": {k: kinds.count(k) for k in set(kinds)},
+        "selection": "curated from held-out test patients: 'typical' = correctly classified and accepted; 'uncertain' = lowest-scoring "
+                     "rejected spectrum of the class. Demo samples are NOT representative of overall accuracy (see nested_grouped_cv).",
+        "overall_heldout_accuracy_for_comparison": metrics["accuracy"]}
 
     if save:
         MODEL_PATH.parent.mkdir(exist_ok=True)
         REPORT_PATH.parent.mkdir(exist_ok=True)
         joblib.dump(artifact, MODEL_PATH)
-        np.savez(DEMO_PATH, X=ds.X[idx], region_type=np.array([LABEL_NAMES[c] for c in ds.y[idx]]),
+        np.savez(DEMO_PATH, X=ds.X[idx], region_type=np.array([LABEL_NAMES[c] for c in ds.y[idx]]), kind=np.array(kinds),
                  patient=ds.patients[idx])
         REPORT_PATH.write_text(json.dumps(report, indent=2))
         print(f"Saved {MODEL_PATH}, {DEMO_PATH}, {REPORT_PATH}")

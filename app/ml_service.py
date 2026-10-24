@@ -66,21 +66,22 @@ def _load_demo() -> dict:
         if not DEMO_PATH.exists():
             raise FileNotFoundError(f"Demo samples not found at {DEMO_PATH}. Run: py -m ml.train")
         d = np.load(DEMO_PATH, allow_pickle=False)
-        _demo = {"X": d["X"], "region": [str(r) for r in d["region_type"]]}
+        _demo = {"X": d["X"], "region": [str(r) for r in d["region_type"]], "kind": [str(k) for k in d["kind"]]}
     return _demo
 
 
-def get_demo_spectrum(region_type: str, index: int | None = None, seed: int | None = None) -> dict:
+def get_demo_spectrum(region_type: str, index: int | None = None, seed: int | None = None, kind: str | None = "typical") -> dict:
     """Return a real held-out spectrum for a virtual region ('tumour'|'stroma'|'adipose').
 
     The region type only selects WHICH recorded spectrum to show; the true label is not returned and is
-    never given to the classifier. `index` picks a specific sample (modulo count); otherwise random.
+    never given to the classifier. `kind`: "typical" (default, clean examples), "uncertain" (shows rejection) or None for all.
+    `index` picks a specific sample (modulo count); otherwise random.
     Returns {"sample_id": int, "spectrum": [8000 floats]}.
     """
     if region_type not in REGION_TYPES:
         raise ValueError(f"region_type must be one of {REGION_TYPES}, got {region_type!r}")
     d = _load_demo()
-    ids = [i for i, r in enumerate(d["region"]) if r == region_type]
+    ids = [i for i, r in enumerate(d["region"]) if r == region_type and (kind is None or d["kind"][i] == kind)]
     if not ids:
         raise LookupError(f"No demo samples for {region_type}")
     pick = ids[index % len(ids)] if index is not None else random.Random(seed).choice(ids)
