@@ -35,8 +35,11 @@ and, if you wish, `scores`. Treat `accepted: false` as "uncertain". Suggested wo
 spectrum (simulation)", not "cancer detected".
 
 ## For Person 3 (LED)
-Receives only the LED state from the backend, never spectra or scores. Suggested mapping is the team's choice; the ML side
-only provides `predicted_class` and `accepted`.
+Receives only the LED state from the backend, never spectra or scores. `app.ml_service.led_state(result)` returns
+`{"led_state": "tumour|stroma|adipose|uncertain", "colour": "red", "rgb": [255, 0, 0]}`.
+PROPOSED mapping (team can change `LED_COLOURS` in `app/ml_service.py`): tumour = red, stroma = blue, adipose = yellow (255,180,0),
+uncertain (rejected) = white. An Arduino Mega has no Wi-Fi: it needs a USB serial link to the laptop, e.g. send `255,0,0
+`.
 
 ## Expected performance (quote these, with the caveats)
 - Best estimate: nested patient-grouped 6-fold CV over all 72 patients (`py -m ml.cv_report`): accuracy **91.1%**, balanced
@@ -51,3 +54,14 @@ only provides `predicted_class` and `accepted`.
 `get_demo_spectrum(region)` returns "typical" spectra: held-out, correctly classified and accepted by the model. 
 `get_demo_spectrum(region, kind="uncertain")` returns a real spectrum the model rejects, to show the uncertainty feature live.
 These show how the pipeline behaves; they do not represent overall accuracy (see above).
+
+## Quick start for any teammate
+```
+git clone https://github.com/ksd-hap/SmartScalpel.git
+cd SmartScalpel
+git checkout feature/ml-engine
+py -m pip install -r requirements-ml.txt
+py -c "from app.ml_service import *; r = predict_tissue(get_demo_spectrum('tumour')['spectrum']); print(r, led_state(r))"
+```
+No dataset or retraining needed: the trained model (`models/`) is in the repo. Run `py -m pytest tests -q` to confirm it works on your machine.
+Held-out test CSVs (not in git, too large) are shared separately as `teammate_package/`.
