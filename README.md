@@ -11,12 +11,11 @@ breast tissue. For each region the backend retrieves a **real, recorded REIMS ma
 ## How it works
 
 ```
-Apple Pencil on iPad  ->  (x, y)  ->  backend maps position to a virtual region (tumour or adipose zone)
+Apple Pencil on iPad  ->  (x, y)  ->  backend maps position to a virtual region (tumour / stroma / adipose zone)
    ->  real held-out REIMS spectrum for that region  ->  ML model classifies it independently
    ->  result shown on iPad  +  LED colour sent to the Arduino
 ```
 
-The demo simulates two region types, tumour and adipose; the model is still a full three-class classifier (stroma is simply not simulated).
 The region type only chooses *which recorded spectrum* to show. The model never receives the true label.
 
 ## ML results
@@ -64,7 +63,7 @@ No dataset or retraining is needed; the trained model is in `models/`. Use sciki
 from app.ml_service import load_model, predict_tissue, get_demo_spectrum, led_state
 
 load_model()                                  # once at startup
-s = get_demo_spectrum("tumour")               # "tumour" or "adipose"; {"sample_id": ..., "spectrum": [8000 floats]}
+s = get_demo_spectrum("stroma")               # {"sample_id": ..., "spectrum": [8000 floats]}
 result = predict_tissue(s["spectrum"])        # exactly one 1-D spectrum, 8000 finite floats
 # {"predicted_class": "stroma", "scores": {...}, "accepted": True, "model_version": "pca-lda-v2", ...}
 led = led_state(result)                       # {"led_state": "tumour", "colour": "red", "rgb": [255, 0, 0]}  (stroma / uncertain -> off)

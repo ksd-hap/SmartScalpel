@@ -19,7 +19,7 @@ All spectra here come from 18 patients the model never saw in training or model 
 spectra_input.csv            sample_id + 8000 intensity columns (header = m/z). This is the ONLY model input. No labels.
 answers.csv                  sample_id, patient, true_label. For checking results only - never feed to the model.
 model_predictions.csv        Saved model output per sample: predicted_class, three scores, accepted, LED state/colour, correct.
-demo_samples.csv             10 curated demo spectra (tumour and adipose only; stroma is not simulated) (region_type = the virtual region the simulation selects them for;
+demo_samples.csv             15 curated demo spectra (region_type = the virtual region the simulation selects them for;
                              kind = typical / uncertain). Same 8000 columns.
 
 Use: py -c "import pandas as pd; from app.ml_service import predict_tissue; d=pd.read_csv('spectra_input.csv'); print(predict_tissue(d.iloc[0,1:].to_numpy()))"
@@ -55,9 +55,8 @@ def main():
     out.to_csv(OUT / "model_predictions.csv", index=False)
 
     d = np.load(ROOT / "models" / "demo_samples.npz", allow_pickle=True)
-    keep = np.isin(d["region_type"], ["tumour", "adipose"])  # stroma is not simulated in the demo
-    dm = pd.DataFrame({"demo_index": range(int(keep.sum())), "region_type": d["region_type"][keep], "kind": d["kind"][keep]})
-    pd.concat([dm, pd.DataFrame(d["X"][keep], columns=cols)], axis=1).to_csv(OUT / "demo_samples.csv", index=False, float_format="%.10g")
+    dm = pd.DataFrame({"demo_index": range(len(d["X"])), "region_type": d["region_type"], "kind": d["kind"]})
+    pd.concat([dm, pd.DataFrame(d["X"], columns=cols)], axis=1).to_csv(OUT / "demo_samples.csv", index=False, float_format="%.10g")
     (OUT / "README.txt").write_text(README)
     print(f"{len(te)} held-out spectra, {len(set(ds.patients[te]))} patients -> {OUT}")
 

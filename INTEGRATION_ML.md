@@ -26,7 +26,7 @@ not sense tissue, and the model does not locate tumours; it classifies one recor
   `scores` are temperature-scaled model scores (sum to 1), NOT clinical probabilities. `accepted=false` means the model is too
   unsure (top score < reject_threshold, currently 0.77): show "uncertain" and tell Person 3 to use the neutral/off colour.
 - Latency: see `latency_single_spectrum` in reports/evaluation.json (about 1 ms) per spectrum on the dev laptop (measured in `reports/evaluation.json`).
-- Demo spectra: 4 typical + 1 uncertain per region type (tumour/adipose in the demo), from held-out patients the model never trained on.
+- Demo spectra: 4 typical + 1 uncertain per region type (tumour/stroma/adipose), from held-out patients the model never trained on.
   `get_demo_spectrum(region, index=None)`; `index` picks one deterministically, otherwise random. The true label is never returned.
 
 ## For Person 2 (iPad/frontend)
@@ -52,7 +52,7 @@ The LED cannot show stroma, so the iPad must show the real class name.
 - Both are on ex-vivo research spectra from one published dataset. Not clinically validated.
 
 ## Demo samples are curated (say so when presenting)
-`get_demo_spectrum(region)` (region = `"tumour"` or `"adipose"`; stroma is not simulated in the demo) returns "typical" spectra: held-out, correctly classified and accepted by the model. 
+`get_demo_spectrum(region)` returns "typical" spectra: held-out, correctly classified and accepted by the model. 
 `get_demo_spectrum(region, kind="uncertain")` returns a real spectrum the model rejects, to show the uncertainty feature live.
 These show how the pipeline behaves; they do not represent overall accuracy (see above).
 
