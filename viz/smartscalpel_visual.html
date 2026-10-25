@@ -76,22 +76,6 @@ button.on{border-color:currentColor;box-shadow:0 0 18px -4px currentColor}
   </div>
 </section>
 
-<section>
-  <h2>3 &middot; The live scalpel</h2>
-  <p class="lede">Drag the scalpel (mouse, finger or Apple Pencil) across the tissue. Each pass pulls a real spectrum from the held-out patients for that region. The model sees only the numbers, never the region. It sometimes hesitates and sometimes errs, and the tally keeps count.</p>
-  <div class="grid2">
-    <div class="card"><canvas id="slab" style="height:420px;touch-action:none;cursor:crosshair"></canvas>
-      <div class="legend"><span><i class="dot" style="background:var(--tumour)"></i>tumour region</span><span><i class="dot" style="background:var(--stroma)"></i>stroma</span><span><i class="dot" style="background:var(--adipose)"></i>adipose region</span><span id="pen"></span></div></div>
-    <div class="card panel">
-      <h3>Spectral barcode</h3><canvas id="bar" style="height:70px"></canvas>
-      <h3 style="margin-top:14px">Model scores</h3><div id="bars"></div>
-      <div class="verdict" id="verdict">Move the scalpel over the tissue</div>
-      <div class="led"><div class="bulb" id="bulb"></div><div id="ledtxt" style="color:var(--mute)">LED off<br><small>red = tumour &middot; green = adipose &middot; off = stroma or unsure</small></div></div>
-      <div class="tally" id="tally"></div>
-    </div>
-  </div>
-</section>
-
 <div class="note"><b>Simulation only.</b> These are pre-recorded ex-vivo spectra from a published dataset (Vaysse et al., Sci Rep 2020). The pencil does not sense tissue, the model does not locate tumours, and nothing here is clinically validated. Scores are model scores, not clinical probabilities.</div>
 </div>
 
@@ -172,62 +156,12 @@ function showGalaxySel(T){const wrong=T.c!==T.pred;
   $('#gsel').innerHTML=`<div style="color:var(--text);font-size:15px">Patient #${T.p} &middot; true tissue <b style="color:${COL[T.c]}">${T.c}</b></div>`+barsHTML(T)+
    `<div class="verdict" style="color:${wrong?'var(--amber)':'var(--text)'}">${T.ok?`Model says ${T.pred}`:`Model unsure (leans ${T.pred})`} ${wrong&&T.ok?'&mdash; wrong':''}</div><div style="color:var(--mute);font-size:13px">${T.ok?(wrong?'A confident mistake: this is the kind the model can make.':'Correct and confident.'):'Below the 0.77 threshold: the system refuses to commit.'}</div>`;}
 
-/* ---------- 3. SLAB ---------- */
-const sc=$('#slab'),sx=sc.getContext('2d');let SW,SH,reg=null,mouse={x:-99,y:-99,down:false},lastPick=0,lastZone='',queues={},tally={n:0,ok:0,led:0,ledOk:0,unsure:0};
-const bc=$('#bar'),bx=bc.getContext('2d');
-function slabLayout(){fit(sc);SW=sc._w;SH=sc._h;paintRegions();}
-function blob(c,cx,cy,rx,ry,seed){c.beginPath();for(let a=0;a<=6.3;a+=.12){const r=1+.16*Math.sin(a*3+seed)+.09*Math.sin(a*5+seed*2);const x=cx+Math.cos(a)*rx*r,y=cy+Math.sin(a)*ry*r;a?c.lineTo(x,y):c.moveTo(x,y);}c.closePath();}
-let off,offx;
-function paintRegions(){off=document.createElement('canvas');off.width=SW;off.height=SH;offx=off.getContext('2d');
-  offx.fillStyle='#6f8cff';offx.fillRect(0,0,SW,SH);                      // stroma background
-  offx.fillStyle='#ff4d5e';blob(offx,SW*.30,SH*.50,SW*.17,SH*.30,1);offx.fill();   // tumour
-  offx.fillStyle='#3ddc97';blob(offx,SW*.74,SH*.52,SW*.15,SH*.30,4);offx.fill();   // adipose
-  reg=offx.getImageData(0,0,SW,SH).data;}
-function zoneAt(x,y){if(x<0||y<0||x>=SW||y>=SH)return null;const i=((y|0)*SW+(x|0))*4,r=reg[i],g=reg[i+1];
-  return r>200?'tumour':(g>180?'adipose':'stroma');}
-function slabDraw(now){
-  sx.clearRect(0,0,SW,SH);
-  sx.drawImage(off,0,0,SW,SH);sx.fillStyle='rgba(8,11,20,.62)';sx.fillRect(0,0,SW,SH);
-  // tissue texture: soft glow of zones
-  sx.globalCompositeOperation='lighter';sx.globalAlpha=.55;sx.drawImage(off,0,0,SW,SH);sx.globalAlpha=1;sx.globalCompositeOperation='source-over';
-  sx.fillStyle='rgba(8,11,20,.45)';sx.fillRect(0,0,SW,SH);
-  sx.fillStyle='rgba(255,255,255,.7)';sx.font='12px system-ui';
-  sx.fillText('tumour region',SW*.30-34,SH*.50+4);sx.fillText('adipose region',SW*.74-38,SH*.52+4);sx.fillText('stroma',SW*.5-16,SH*.92);
-  if(mouse.x>0){ // scalpel
-    sx.save();sx.translate(mouse.x,mouse.y);sx.rotate(-.6);
-    const heat=mouse.down?1:.5;const g=sx.createRadialGradient(0,0,0,0,0,28);g.addColorStop(0,`rgba(255,200,120,${.55*heat})`);g.addColorStop(1,'transparent');sx.fillStyle=g;sx.fillRect(-30,-30,60,60);
-    sx.fillStyle='#d9deec';sx.beginPath();sx.moveTo(0,0);sx.lineTo(10,-6);sx.lineTo(70,-6);sx.lineTo(70,6);sx.lineTo(10,6);sx.closePath();sx.fill();
-    sx.fillStyle='#8791ad';sx.fillRect(70,-8,60,16);sx.restore();}
-}
-function pick(zone){
-  if(!queues[zone]||!queues[zone].length){queues[zone]=D.test.filter(t=>t.c===zone).sort(()=>Math.random()-.5);}
-  return queues[zone].pop();
-}
-function showSample(T){
-  // barcode
-  const w=bc._w,h=bc._h;bx.clearRect(0,0,w,h);const n=T.spec.length;
-  for(let i=0;i<n;i++){const v=T.spec[i]/255,x=i*(w/n);bx.fillStyle=`hsl(${215-v*190},85%,${30+v*35}%)`;bx.fillRect(x,h-v*h,w/n+.6,v*h);}
-  $('#bars').innerHTML=barsHTML(T);
-  const wrong=T.c!==T.pred,led=T.ok&&T.pred==='tumour'?'tumour':(T.ok&&T.pred==='adipose'?'adipose':'off');
-  $('#verdict').innerHTML=T.ok?`Model says <span style="color:${COL[T.pred]}">${T.pred.toUpperCase()}</span>`:`Model unsure <span style="color:var(--mute)">(leans ${T.pred})</span>`;
-  const b=$('#bulb'),c=led==='off'?null:COL[led];b.style.background=c||'#1a1f33';b.style.borderColor=c||'#2a3252';b.style.boxShadow=c?`0 0 34px 8px ${c}88`:'none';
-  $('#ledtxt').innerHTML=led==='off'?`LED off<br><small>${T.ok?'stroma: not lit':'uncertain: not lit'}</small>`:`LED ${led==='tumour'?'RED':'GREEN'}<br><small>${led}</small>`;
-  tally.n++;if(!wrong)tally.ok++;if(!T.ok)tally.unsure++;if(led!=='off'){tally.led++;if(led===T.c)tally.ledOk++;}
-  $('#tally').innerHTML=`<b>${tally.n}</b> spectra sampled &middot; model right on <b>${tally.ok}</b> (${(tally.ok/tally.n*100).toFixed(0)}%) &middot; unsure on <b>${tally.unsure}</b> &middot; LED lit <b>${tally.led}</b>, correct <b>${tally.ledOk}</b>`;
-}
-function onMove(e){const r=sc.getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;
-  $('#pen').textContent=e.pointerType==='pen'?'Apple Pencil detected':(e.pointerType==='touch'?'touch':'');
-  const z=zoneAt(mouse.x,mouse.y);if(!z)return;const now=performance.now();
-  if(z!==lastZone||now-lastPick>520){lastZone=z;lastPick=now;showSample(pick(z));}}
-sc.addEventListener('pointermove',onMove);sc.addEventListener('pointerdown',e=>{mouse.down=true;sc.setPointerCapture(e.pointerId);onMove(e);});
-sc.addEventListener('pointerup',()=>mouse.down=false);sc.addEventListener('pointerleave',()=>{mouse.x=-99;});
-
 /* ---------- boot ---------- */
-function layout(){plumeLayout();fit(gc);GW=gc._w;GH=gc._h;slabLayout();fit(bc);assign(cls);}
+function layout(){plumeLayout();fit(gc);GW=gc._w;GH=gc._h;assign(cls);}
 initParts();layout();
 document.querySelector('#plumeBtns button[data-c="tumour"]').classList.add('on');
 window.addEventListener('resize',()=>{layout();});
-(function loop(now){plumeDraw(now);galaxyDraw(now);slabDraw(now);requestAnimationFrame(loop);})(performance.now());
+(function loop(now){plumeDraw(now);galaxyDraw(now);requestAnimationFrame(loop);})(performance.now());
 </script>
 </body>
 </html>
