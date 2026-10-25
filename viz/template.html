@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartScalpel Tissue Fingerprint</title>
+<style>
+:root{--bg:#07090f;--panel:#0e1220;--line:#1c2338;--text:#e8ecf7;--mute:#8791ad;
+--tumour:#ff4d5e;--stroma:#6f8cff;--adipose:#3ddc97;--amber:#ffb454}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#141a33 0%,var(--bg) 60%) fixed;color:var(--text);
+font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px}
+header{padding:44px 0 10px}
+.eyebrow{letter-spacing:.22em;text-transform:uppercase;color:var(--mute);font-size:12px}
+h1{font-size:clamp(30px,5vw,54px);line-height:1.05;margin:8px 0 10px;font-weight:750;letter-spacing:-.02em}
+h1 span{background:linear-gradient(90deg,var(--tumour),var(--amber),var(--adipose));-webkit-background-clip:text;color:transparent}
+.sub{color:var(--mute);max-width:760px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:26px 0 8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{display:block;font-size:30px;letter-spacing:-.02em}
+.stat small{color:var(--mute)}
+section{margin-top:54px}
+h2{font-size:22px;margin:0 0 4px}
+.lede{color:var(--mute);margin:0 0 16px;max-width:820px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;position:relative}
+canvas{display:block;width:100%;border-radius:12px;background:#080b14}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+button{background:#141a2e;color:var(--text);border:1px solid var(--line);padding:9px 16px;border-radius:999px;cursor:pointer;font:inherit}
+button:hover{border-color:#39466e}
+button.on{border-color:currentColor;box-shadow:0 0 18px -4px currentColor}
+.b-tumour{color:var(--tumour)}.b-stroma{color:var(--stroma)}.b-adipose{color:var(--adipose)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;color:var(--mute);font-size:13px;margin-top:10px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.panel h3{margin:0 0 8px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.bar{display:grid;grid-template-columns:70px 1fr 48px;gap:10px;align-items:center;margin:7px 0;font-size:14px}
+.track{height:12px;background:#151b2f;border-radius:99px;overflow:hidden}
+.fill{height:100%;width:0;border-radius:99px;transition:width .35s}
+.verdict{font-size:20px;font-weight:700;margin:12px 0 4px;min-height:30px}
+.led{display:flex;align-items:center;gap:14px;margin-top:10px}
+.bulb{width:46px;height:46px;border-radius:50%;background:#1a1f33;border:2px solid #2a3252;transition:all .25s}
+.tally{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);color:var(--mute);font-size:13px}
+.tally b{color:var(--text)}
+.tip{position:absolute;pointer-events:none;background:#0b0f1d;border:1px solid #2a3252;border-radius:10px;padding:8px 10px;font-size:12.5px;display:none;z-index:5;max-width:220px}
+.note{margin-top:60px;border:1px solid #3a2f1b;background:#17120a;color:#e8d3a8;border-radius:14px;padding:14px 16px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">SmartScalpel Live &middot; machine learning</div>
+  <h1>Every tissue has a <span>chemical fingerprint</span></h1>
+  <p class="sub">Real REIMS spectra from 72 patients, and a classifier that never saw the patients you are about to explore. Everything on this page is real data and real model output.</p>
+  <div class="strip" id="strip"></div>
+</header>
+
+<section>
+  <h2>1 &middot; The ion plume</h2>
+  <p class="lede">An electrosurgical knife vaporises tissue. The smoke carries its lipids as ions into a mass spectrometer, which sorts them by mass-to-charge (m/z). Each dot below is a share of the real averaged signal of that tissue, flying to its place on the m/z axis.</p>
+  <div class="card">
+    <div class="btns" id="plumeBtns"></div>
+    <canvas id="plume" style="height:380px"></canvas>
+    <div class="legend"><span>Fat-storage lipids dominate the right (800&ndash;1000), membrane lipids the middle (600&ndash;800), free fatty acids the left (200&ndash;400). Class averages of the real spectra.</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>2 &middot; The tissue galaxy</h2>
+  <p class="lede">All 689 spectra projected onto the two directions that best separate the tissues (learned from training patients only). Rings mark spectra from the 18 patients held out from training. A pulsing amber ring is a spectrum the model got wrong. Hover or click a ringed point. The overlap in the middle is why 91%, not 100%.</p>
+  <div class="grid2">
+    <div class="card"><canvas id="galaxy" style="height:460px"></canvas><div class="tip" id="gtip"></div>
+      <div class="legend"><span><i class="dot" style="background:var(--tumour)"></i>tumour</span><span><i class="dot" style="background:var(--stroma)"></i>stroma</span><span><i class="dot" style="background:var(--adipose)"></i>adipose</span><span>&#9711; held-out patient</span><span style="color:var(--amber)">&#9711; model error</span></div></div>
+    <div class="card panel"><h3>Selected held-out spectrum</h3><div id="gsel" style="color:var(--mute)">Click a ringed point.</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>3 &middot; The live scalpel</h2>
+  <p class="lede">Drag the scalpel (mouse, finger or Apple Pencil) across the tissue. Each pass pulls a real spectrum from the held-out patients for that region. The model sees only the numbers, never the region. It sometimes hesitates and sometimes errs, and the tally keeps count.</p>
+  <div class="grid2">
+    <div class="card"><canvas id="slab" style="height:420px;touch-action:none;cursor:crosshair"></canvas>
+      <div class="legend"><span><i class="dot" style="background:var(--tumour)"></i>tumour region</span><span><i class="dot" style="background:var(--stroma)"></i>stroma</span><span><i class="dot" style="background:var(--adipose)"></i>adipose region</span><span id="pen"></span></div></div>
+    <div class="card panel">
+      <h3>Spectral barcode</h3><canvas id="bar" style="height:70px"></canvas>
+      <h3 style="margin-top:14px">Model scores</h3><div id="bars"></div>
+      <div class="verdict" id="verdict">Move the scalpel over the tissue</div>
+      <div class="led"><div class="bulb" id="bulb"></div><div id="ledtxt" style="color:var(--mute)">LED off<br><small>red = tumour &middot; green = adipose &middot; off = stroma or unsure</small></div></div>
+      <div class="tally" id="tally"></div>
+    </div>
+  </div>
+</section>
+
+<div class="note"><b>Simulation only.</b> These are pre-recorded ex-vivo spectra from a published dataset (Vaysse et al., Sci Rep 2020). The pencil does not sense tissue, the model does not locate tumours, and nothing here is clinically validated. Scores are model scores, not clinical probabilities.</div>
+</div>
+
+<script>
+const D=/*DATA*/null;
+const COL={tumour:'#ff4d5e',stroma:'#6f8cff',adipose:'#3ddc97'};
+const $=s=>document.querySelector(s);
+function fit(c){const r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);c._d=d;c._w=r.width;c._h=r.height;c.getContext('2d').setTransform(d,0,0,d,0,0);}
+const pct=x=>(x*100).toFixed(1)+'%';
+
+/* stats strip */
+const S=D.stats;
+$('#strip').innerHTML=[
+ [S.n_spectra,'real spectra'],[S.n_patients,'patients'],[pct(S.nested_acc),'accuracy, patient-grouped CV'],
+ [pct(S.nested_tumour),'tumour recall'],[pct(S.paper_acc),'original study, same data']
+].map(a=>`<div class="stat"><b>${a[0]}</b><small>${a[1]}</small></div>`).join('');
+
+/* ---------- 1. PLUME ---------- */
+const pc=$('#plume'),px=pc.getContext('2d');let PW,PH,parts=[],cls='tumour',t0=performance.now();
+const N=2600,BINS=400,pad={l:40,r:20,b:46,t:20};
+function plumeLayout(){fit(pc);PW=pc._w;PH=pc._h;}
+function assign(c){
+  const m=D.means[c],w=m.map(v=>Math.pow(v,.8)),sum=w.reduce((a,b)=>a+b,0),cdf=[];let acc=0;
+  for(const v of w){acc+=v/sum;cdf.push(acc);}
+  const counts=new Array(BINS).fill(0),picks=[];
+  for(let i=0;i<N;i++){const r=Math.random();let lo=0,hi=BINS-1;while(lo<hi){const mid=(lo+hi)>>1;if(cdf[mid]<r)lo=mid+1;else hi=mid;}picks.push(lo);counts[lo]++;}
+  const mc=Math.max(...counts),plotH=PH-pad.t-pad.b,sp=Math.min(3.2,plotH*.92/mc),bw=(PW-pad.l-pad.r)/BINS,stack=new Array(BINS).fill(0);
+  const now=performance.now(),src={x:PW*.12,y:PH-pad.b-6};
+  parts.forEach((p,i)=>{
+    const b=picks[i];p.sx=parts[i].init?src.x+(Math.random()-.5)*14:p.x;p.sy=parts[i].init?src.y+(Math.random()-.5)*8:p.y;
+    p.tx=pad.l+b*bw+bw/2;p.ty=PH-pad.b-(stack[b]++)*sp-2;p.t0=now+Math.random()*700;p.dur=1100+Math.random()*900;p.arc=40+Math.random()*120;p.init=false;p.ph=Math.random()*6.28;p.sz=Math.max(1.3,Math.min(2.4,sp*.8));
+  });
+}
+function initParts(){parts=[];for(let i=0;i<N;i++)parts.push({x:-10,y:-10,init:true});}
+function plumeDraw(now){
+  px.clearRect(0,0,PW,PH);
+  const g=px.createRadialGradient(PW*.12,PH-pad.b,0,PW*.12,PH-pad.b,120);g.addColorStop(0,COL[cls]+'66');g.addColorStop(1,'transparent');px.fillStyle=g;px.fillRect(0,0,PW,PH);
+  px.strokeStyle='#1c2338';px.fillStyle='#8791ad';px.font='11px system-ui';px.lineWidth=1;
+  const y0=PH-pad.b+4;px.beginPath();px.moveTo(pad.l,y0);px.lineTo(PW-pad.r,y0);px.stroke();
+  for(let mz=200;mz<=1000;mz+=100){const x=pad.l+(mz-200)/800*(PW-pad.l-pad.r);px.beginPath();px.moveTo(x,y0);px.lineTo(x,y0+5);px.stroke();px.fillText(mz,x-9,y0+18);}
+  px.fillText('m/z  (mass-to-charge)',PW/2-50,PH-8);
+  px.fillStyle=COL[cls];
+  for(const p of parts){
+    let t=(now-p.t0)/p.dur;let x,y;
+    if(t<=0){x=p.sx;y=p.sy;}else if(t>=1){x=p.tx;y=p.ty+Math.sin(now/700+p.ph)*.5;}
+    else{const e=1-Math.pow(1-t,3);x=p.sx+(p.tx-p.sx)*e;y=p.sy+(p.ty-p.sy)*e-Math.sin(Math.PI*t)*p.arc;}
+    p.x=x;p.y=y;px.globalAlpha=t<=0?0:.9;px.fillRect(x,y,p.sz,p.sz);
+  }
+  px.globalAlpha=1;
+}
+function setPlume(c){cls=c;document.querySelectorAll('#plumeBtns button').forEach(b=>b.classList.toggle('on',b.dataset.c===c||b.dataset.c==='burn'&&false));assign(c);}
+$('#plumeBtns').innerHTML=['tumour','stroma','adipose'].map(c=>`<button class="b-${c}" data-c="${c}">${c[0].toUpperCase()+c.slice(1)}</button>`).join('')+'<button data-c="burn">Burn again</button>';
+$('#plumeBtns').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.c==='burn'){parts.forEach(p=>{p.init=true});assign(cls);document.querySelectorAll('#plumeBtns button').forEach(x=>x.classList.toggle('on',x.dataset.c===cls));}else setPlume(b.dataset.c);});
+
+/* ---------- 2. GALAXY ---------- */
+const gc=$('#galaxy'),gx=gc.getContext('2d'),gtip=$('#gtip');let GW,GH,gsel=-1,ghover=-1;
+const testIdxByPt={};D.test.forEach((t,i)=>testIdxByPt[t.pt]=i);
+const ptList=D.pts.map((p,i)=>({...p,i,ti:testIdxByPt[i]!==undefined?testIdxByPt[i]:-1}));
+function gpos(p){return [26+p.x*(GW-52),GH-26-p.y*(GH-52)];}
+function galaxyDraw(now){
+  gx.clearRect(0,0,GW,GH);
+  for(const p of ptList){if(p.t)continue;const [x,y]=gpos(p);gx.globalAlpha=.42;gx.fillStyle=COL[p.c];gx.beginPath();gx.arc(x,y,3,0,6.283);gx.fill();}
+  gx.globalAlpha=1;
+  for(const p of ptList){if(!p.t)continue;const [x,y]=gpos(p),T=D.test[p.ti],wrong=T.c!==T.pred;
+    gx.fillStyle=COL[p.c];gx.beginPath();gx.arc(x,y,4.2,0,6.283);gx.fill();
+    gx.lineWidth=1.5;gx.strokeStyle=wrong?'#ffb454':'rgba(255,255,255,.85)';
+    const r=wrong?8+Math.sin(now/260+p.i)*2.2:7;gx.beginPath();gx.arc(x,y,r,0,6.283);gx.stroke();
+    if(p.i===gsel||p.i===ghover){gx.strokeStyle='#fff';gx.lineWidth=2.4;gx.beginPath();gx.arc(x,y,12,0,6.283);gx.stroke();}}
+}
+function nearest(mx,my){let best=-1,bd=14*14;for(const p of ptList){if(!p.t)continue;const [x,y]=gpos(p),d=(x-mx)**2+(y-my)**2;if(d<bd){bd=d;best=p.i;}}return best;}
+gc.addEventListener('pointermove',e=>{const r=gc.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;ghover=nearest(mx,my);
+  if(ghover>=0){const T=D.test[ptList[ghover].ti];gtip.style.display='block';gtip.style.left=Math.min(mx+14,GW-200)+'px';gtip.style.top=(my+14)+'px';
+    gtip.innerHTML=`<b>Patient #${T.p}</b><br>true: ${T.c}<br>model: ${T.pred}`;gc.style.cursor='pointer';}else{gtip.style.display='none';gc.style.cursor='default';}});
+gc.addEventListener('pointerleave',()=>{ghover=-1;gtip.style.display='none';});
+gc.addEventListener('click',e=>{const r=gc.getBoundingClientRect(),i=nearest(e.clientX-r.left,e.clientY-r.top);if(i<0)return;gsel=i;showGalaxySel(D.test[ptList[i].ti]);});
+function barsHTML(T){const order=['tumour','stroma','adipose'];return order.map((n,k)=>`<div class="bar"><span>${n}</span><div class="track"><div class="fill" style="width:${(T.s[k]*100).toFixed(1)}%;background:${COL[n]}"></div></div><span>${(T.s[k]*100).toFixed(0)}%</span></div>`).join('');}
+function showGalaxySel(T){const wrong=T.c!==T.pred;
+  $('#gsel').innerHTML=`<div style="color:var(--text);font-size:15px">Patient #${T.p} &middot; true tissue <b style="color:${COL[T.c]}">${T.c}</b></div>`+barsHTML(T)+
+   `<div class="verdict" style="color:${wrong?'var(--amber)':'var(--text)'}">${T.ok?`Model says ${T.pred}`:`Model unsure (leans ${T.pred})`} ${wrong&&T.ok?'&mdash; wrong':''}</div><div style="color:var(--mute);font-size:13px">${T.ok?(wrong?'A confident mistake: this is the kind the model can make.':'Correct and confident.'):'Below the 0.77 threshold: the system refuses to commit.'}</div>`;}
+
+/* ---------- 3. SLAB ---------- */
+const sc=$('#slab'),sx=sc.getContext('2d');let SW,SH,reg=null,mouse={x:-99,y:-99,down:false},lastPick=0,lastZone='',queues={},tally={n:0,ok:0,led:0,ledOk:0,unsure:0};
+const bc=$('#bar'),bx=bc.getContext('2d');
+function slabLayout(){fit(sc);SW=sc._w;SH=sc._h;paintRegions();}
+function blob(c,cx,cy,rx,ry,seed){c.beginPath();for(let a=0;a<=6.3;a+=.12){const r=1+.16*Math.sin(a*3+seed)+.09*Math.sin(a*5+seed*2);const x=cx+Math.cos(a)*rx*r,y=cy+Math.sin(a)*ry*r;a?c.lineTo(x,y):c.moveTo(x,y);}c.closePath();}
+let off,offx;
+function paintRegions(){off=document.createElement('canvas');off.width=SW;off.height=SH;offx=off.getContext('2d');
+  offx.fillStyle='#6f8cff';offx.fillRect(0,0,SW,SH);                      // stroma background
+  offx.fillStyle='#ff4d5e';blob(offx,SW*.30,SH*.50,SW*.17,SH*.30,1);offx.fill();   // tumour
+  offx.fillStyle='#3ddc97';blob(offx,SW*.74,SH*.52,SW*.15,SH*.30,4);offx.fill();   // adipose
+  reg=offx.getImageData(0,0,SW,SH).data;}
+function zoneAt(x,y){if(x<0||y<0||x>=SW||y>=SH)return null;const i=((y|0)*SW+(x|0))*4,r=reg[i],g=reg[i+1];
+  return r>200?'tumour':(g>180?'adipose':'stroma');}
+function slabDraw(now){
+  sx.clearRect(0,0,SW,SH);
+  sx.drawImage(off,0,0,SW,SH);sx.fillStyle='rgba(8,11,20,.62)';sx.fillRect(0,0,SW,SH);
+  // tissue texture: soft glow of zones
+  sx.globalCompositeOperation='lighter';sx.globalAlpha=.55;sx.drawImage(off,0,0,SW,SH);sx.globalAlpha=1;sx.globalCompositeOperation='source-over';
+  sx.fillStyle='rgba(8,11,20,.45)';sx.fillRect(0,0,SW,SH);
+  sx.fillStyle='rgba(255,255,255,.7)';sx.font='12px system-ui';
+  sx.fillText('tumour region',SW*.30-34,SH*.50+4);sx.fillText('adipose region',SW*.74-38,SH*.52+4);sx.fillText('stroma',SW*.5-16,SH*.92);
+  if(mouse.x>0){ // scalpel
+    sx.save();sx.translate(mouse.x,mouse.y);sx.rotate(-.6);
+    const heat=mouse.down?1:.5;const g=sx.createRadialGradient(0,0,0,0,0,28);g.addColorStop(0,`rgba(255,200,120,${.55*heat})`);g.addColorStop(1,'transparent');sx.fillStyle=g;sx.fillRect(-30,-30,60,60);
+    sx.fillStyle='#d9deec';sx.beginPath();sx.moveTo(0,0);sx.lineTo(10,-6);sx.lineTo(70,-6);sx.lineTo(70,6);sx.lineTo(10,6);sx.closePath();sx.fill();
+    sx.fillStyle='#8791ad';sx.fillRect(70,-8,60,16);sx.restore();}
+}
+function pick(zone){
+  if(!queues[zone]||!queues[zone].length){queues[zone]=D.test.filter(t=>t.c===zone).sort(()=>Math.random()-.5);}
+  return queues[zone].pop();
+}
+function showSample(T){
+  // barcode
+  const w=bc._w,h=bc._h;bx.clearRect(0,0,w,h);const n=T.spec.length;
+  for(let i=0;i<n;i++){const v=T.spec[i]/255,x=i*(w/n);bx.fillStyle=`hsl(${215-v*190},85%,${30+v*35}%)`;bx.fillRect(x,h-v*h,w/n+.6,v*h);}
+  $('#bars').innerHTML=barsHTML(T);
+  const wrong=T.c!==T.pred,led=T.ok&&T.pred==='tumour'?'tumour':(T.ok&&T.pred==='adipose'?'adipose':'off');
+  $('#verdict').innerHTML=T.ok?`Model says <span style="color:${COL[T.pred]}">${T.pred.toUpperCase()}</span>`:`Model unsure <span style="color:var(--mute)">(leans ${T.pred})</span>`;
+  const b=$('#bulb'),c=led==='off'?null:COL[led];b.style.background=c||'#1a1f33';b.style.borderColor=c||'#2a3252';b.style.boxShadow=c?`0 0 34px 8px ${c}88`:'none';
+  $('#ledtxt').innerHTML=led==='off'?`LED off<br><small>${T.ok?'stroma: not lit':'uncertain: not lit'}</small>`:`LED ${led==='tumour'?'RED':'GREEN'}<br><small>${led}</small>`;
+  tally.n++;if(!wrong)tally.ok++;if(!T.ok)tally.unsure++;if(led!=='off'){tally.led++;if(led===T.c)tally.ledOk++;}
+  $('#tally').innerHTML=`<b>${tally.n}</b> spectra sampled &middot; model right on <b>${tally.ok}</b> (${(tally.ok/tally.n*100).toFixed(0)}%) &middot; unsure on <b>${tally.unsure}</b> &middot; LED lit <b>${tally.led}</b>, correct <b>${tally.ledOk}</b>`;
+}
+function onMove(e){const r=sc.getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;
+  $('#pen').textContent=e.pointerType==='pen'?'Apple Pencil detected':(e.pointerType==='touch'?'touch':'');
+  const z=zoneAt(mouse.x,mouse.y);if(!z)return;const now=performance.now();
+  if(z!==lastZone||now-lastPick>520){lastZone=z;lastPick=now;showSample(pick(z));}}
+sc.addEventListener('pointermove',onMove);sc.addEventListener('pointerdown',e=>{mouse.down=true;sc.setPointerCapture(e.pointerId);onMove(e);});
+sc.addEventListener('pointerup',()=>mouse.down=false);sc.addEventListener('pointerleave',()=>{mouse.x=-99;});
+
+/* ---------- boot ---------- */
+function layout(){plumeLayout();fit(gc);GW=gc._w;GH=gc._h;slabLayout();fit(bc);assign(cls);}
+initParts();layout();
+document.querySelector('#plumeBtns button[data-c="tumour"]').classList.add('on');
+window.addEventListener('resize',()=>{layout();});
+(function loop(now){plumeDraw(now);galaxyDraw(now);slabDraw(now);requestAnimationFrame(loop);})(performance.now());
+</script>
+</body>
+</html>
