@@ -101,6 +101,8 @@ def test_demo_samples_have_no_label_leak():
     assert "label" not in inspect.signature(ml_service.predict_tissue).parameters
     with pytest.raises(ValueError):
         ml_service.get_demo_spectrum("bone")
+    with pytest.raises(ValueError):
+        ml_service.get_demo_spectrum("stroma")  # not used in the demo
 
 
 @real
@@ -115,7 +117,7 @@ def test_real_saved_model_roundtrip():
     ml_service._model = None
     m = ml_service.load_model()
     assert m["n_features"] == 8000
-    for region in ml_service.REGION_TYPES:
+    for region in ml_service.DEMO_REGION_TYPES:
         s = ml_service.get_demo_spectrum(region, index=0)
         out = ml_service.predict_tissue(s["spectrum"])
         assert out == ml_service.predict_tissue(s["spectrum"])

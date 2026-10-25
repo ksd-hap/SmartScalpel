@@ -15,7 +15,8 @@ from ml.scoring import scaled_proba
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = ROOT / "models" / "tissue_model.joblib"
 DEMO_PATH = ROOT / "models" / "demo_samples.npz"
-REGION_TYPES = ("tumour", "stroma", "adipose")
+REGION_TYPES = ("tumour", "stroma", "adipose")      # classes the model predicts
+DEMO_REGION_TYPES = ("tumour", "adipose")            # virtual regions used in the demo (stroma deliberately not simulated)
 
 # LED mapping agreed by the team: two colours only. Stroma and rejected (low-confidence) results leave the LED off.
 LED_COLOURS = {
@@ -93,8 +94,8 @@ def get_demo_spectrum(region_type: str, index: int | None = None, seed: int | No
     `index` picks a specific sample (modulo count); otherwise random.
     Returns {"sample_id": int, "spectrum": [8000 floats]}.
     """
-    if region_type not in REGION_TYPES:
-        raise ValueError(f"region_type must be one of {REGION_TYPES}, got {region_type!r}")
+    if region_type not in DEMO_REGION_TYPES:
+        raise ValueError(f"region_type must be one of {DEMO_REGION_TYPES} (stroma is not used in the demo), got {region_type!r}")
     d = _load_demo()
     ids = [i for i, r in enumerate(d["region"]) if r == region_type and (kind is None or d["kind"][i] == kind)]
     if not ids:
@@ -104,6 +105,6 @@ def get_demo_spectrum(region_type: str, index: int | None = None, seed: int | No
 
 
 if __name__ == "__main__":
-    for r in REGION_TYPES:
+    for r in DEMO_REGION_TYPES:
         s = get_demo_spectrum(r, seed=0)
         print(r, "->", predict_tissue(s["spectrum"]))
