@@ -71,6 +71,24 @@ led = led_state(result)                       # {"led_state": "tumour", "colour"
 
 Wrong input size or NaN values raise `ValueError`. Per-role integration notes are in [`INTEGRATION_ML.md`](INTEGRATION_ML.md).
 
+## Theatre demo (iPad + LED)
+
+`server.py` serves the theatre page (`web/index.html`) to the iPad over Wi-Fi, classifies every burn with the real model, and
+drives the Arduino LED over USB serial.
+
+```bash
+py -m pip install -r requirements-ml.txt -r requirements-web.txt
+py server.py                  # or double-click start_theatre.bat; --serial COM5 / --no-serial
+```
+
+Then open the printed `http://<laptop-ip>:5000/theatre` in Safari on the iPad (same network; use a hotspot if venue Wi-Fi blocks
+device-to-device traffic). The server needs the held-out spectra CSV at `data/spectra_input.csv` (shared separately, not in git).
+If the Arduino is plugged into a different laptop, run `led_bridge.bat http://<server-ip>:5000` there (`led_bridge.py`).
+
+`web/theatre_side.html` is the side-view variant of the theatre page (with a retractor tool); copy it over `web/index.html` to use
+it. `web/SmartScalpel_Simulator.html` is the earlier smoke simulator; it expects a different API (`/api/measure`, `/api/status`)
+that `server.py` does not provide. Slides and the model explainer are in `docs/`.
+
 ## Repository layout
 
 | Path | Purpose |
@@ -80,6 +98,10 @@ Wrong input size or NaN values raise `ValueError`. Per-role integration notes ar
 | `ml/evaluate.py`, `ml/cv_report.py`, `ml/validate.py` | Metrics, nested CV, one-command validation |
 | `ml/experiments.py`, `ml/export_csv.py`, `ml/scoring.py` | Variant comparison, CSV export, score scaling |
 | `app/ml_service.py` | Inference API used by the backend |
+| `server.py`, `start_theatre.bat` | Theatre server: serves the iPad page, runs the model, drives the LED |
+| `led_bridge.py`, `led_bridge.bat` | Forwards LED colours to an Arduino on a second laptop |
+| `web/` | iPad theatre pages and the earlier smoke simulator |
+| `docs/` | Presenter guides, slides (`SmartScalpel.pdf`) and model explainer |
 | `models/` | Trained pipeline and demo spectra |
 | `reports/` | Evaluation and experiment results |
 | `tests/` | Automated tests |
